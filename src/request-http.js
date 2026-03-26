@@ -40,8 +40,18 @@ const postReq = http.request(postOptions, (res) => {
     });
 
     res.on('end', () => {
-        console.log('post result - ', data);
+        const statusCode  = res;
+
+        if (statusCode >= 200 && statusCode < 300) {
+            console.log('POST success - ', data);
+        } else {
+            console.error(`POST failed -  ${statusCode}:`, data);
+        }
     });
+});
+
+postReq.on('error', (err) => {
+    console.error('POST request eerorr:', err.message);
 });
 
 postReq.write(postData);

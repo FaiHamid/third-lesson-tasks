@@ -11,8 +11,13 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://localhost:${PORT}`);
 
     if(req.method === 'GET' && url.pathname === '/sum') {
-        const a = Number(url.searchParams.get('a'))
-        const b = Number(url.searchParams.get('b'));
+        const aRaw = Number(url.searchParams.get('a'))
+        const bRaw = Number(url.searchParams.get('b'));
+
+        if (aRaw === null || bRaw === null) {
+            res.setHeader( 'Content-Type', 'application/json' );
+            return res.end(JSON.stringify({ error: 'no query parameters' }));
+        }
 
         const result =  a+b;
 
@@ -27,7 +32,14 @@ const server = http.createServer((req, res) => {
         });
 
         req.on('end', () => {
-            const data = JSON.parse(body);
+            let data;
+            try {
+                data = JSON.parse(body);
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'invalid json body' }));
+            }
+
 
             const result = Number(data.a) + Number(data.b);
 
@@ -39,9 +51,6 @@ const server = http.createServer((req, res) => {
         res.statusCode = 404;
         res.end();
     }
-
-    // Додайте сюди обробку
-    res.end();
 });
 
 server.listen(PORT, () => {
