@@ -7,15 +7,14 @@ dotenv.config({ path: '../.env' }); // в app.js працює без шляху,
 
 const PORT = process.env.PORT || 8000;
 
+const BASE_URL = `http://localhost:${PORT}/sum`;
 // write get request with query params
 const getRequestSum = async (params) => {
-    const { a, b } = params
-
     try {
-        return await axios.get(`http://localhost:${PORT}/sum?a=${a}&b=${b}`)
+        return await axios.get(BASE_URL, { params })
     }
     catch (err) {
-        console.log(err);
+        return err.response || { data: { error: 'Server is down' } };
         return
     }
 }
@@ -23,11 +22,12 @@ const getRequestSum = async (params) => {
 // write post request 
 const postRequestSum = async (params) => {
     try {
-        return await axios.post(`http://localhost:${PORT}/sum`, params)
+
+        return await axios.post(BASE_URL, params)
     }
     catch (err) {
-        console.log(err);
-        return
+        return err.response || { data: { error: 'Server is down' } };
+
     }
 }
 

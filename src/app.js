@@ -6,36 +6,44 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const PORT = process.env.PORT || 8000;
+function checkForNull(res, a, b) {
+    if (a == null || b == null) {
+        res.writeHead(422, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            error: "Missing parameters",
+            message: "Both 'a' and 'b' are required"
+        }));
+        return true
+    }
+    return false
+}
+function checkForNaN(res, a, b) {
+    if (isNaN(a) || isNaN(b)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            error: "Wrong parameters",
+            message: "Both 'a' and 'b' should be numbers"
+        }));
+        return true
+    }
+    return false
+}
 
 const server = http.createServer((req, res) => {
     // Додайте сюди обробку
-    const [path, query] = req.url.split('?');
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const path = url.pathname;
 
     if (req.method === 'GET' && path === '/sum') {
-        if (!query) {
-            res.writeHead(400);
-            return res.end('Empty query');
-        }
-        //v1
-        // const a = query.split('&')[0].split('=')[1]
-        // const b = query.split('&')[1].split('=')[1]
-        
-        // v2
-        let values = [];
+        const a = url.searchParams.get('a');
+        const b = url.searchParams.get('b');
 
-        const queryArray = query.split('&');
+        if (checkForNull(res, a, b)) return;
+        if (checkForNaN(res, a, b)) return;
 
-        queryArray.forEach(pair => {
-            const [key, value] = pair.split('=');
-            values.push(value);
-        });
+        const result = Number(a) + Number(b);
 
-        const result = values.reduce((acc, val) => {
-            const num = Number(val);
-            return acc + num;
-        }, 0);
-
-        res.writeHead(200);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ result }));
     }
 
@@ -48,28 +56,35 @@ const server = http.createServer((req, res) => {
 
         req.on('end', () => {
             if (!body) {
-                res.writeHead(400);
-                return res.end('Empty body');
+                res.writeHead(422, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({
+                    error: "Empty body",
+                }));
             }
 
             try {
+
                 const { a, b } = JSON.parse(body);
+
+                if (checkForNull(res, a, b)) return;
+                if (checkForNaN(res, a, b)) return;
 
                 const result = Number(a) + Number(b);
 
-                res.writeHead(200);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
                 return res.end(JSON.stringify({ result }));
             } catch (e) {
-                res.writeHead(400);
-                return res.end('Invalid JSON');
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({
+                    error: "Invalid JSON",
+                }));
             }
         });
 
         return;
     }
-
-
-    res.end();
+    res.writeHead(404);
+    res.end(JSON.stringify({ error: "Not Found" }));
 });
 
 server.listen(PORT, () => {
