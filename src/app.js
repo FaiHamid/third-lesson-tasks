@@ -9,28 +9,54 @@ const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const pathName = parsedUrl.pathname;
 
-    // Якщо прийшов GET запит (дані в URL)
     if (pathName === '/sum' && req.method === 'GET') {
         const query = parsedUrl.query;
-        const result = Number(query.a) + Number(query.b);
+        const a = Number(query.a);
+        const b = Number(query.b);
+
+        if (isNaN(a) || isNaN(b)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Bad Request: a and b must be numbers' }));
+        }
+
+        const result = a + b;
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ result }));
     } 
-    // Якщо прийшов POST запит (дані в тілі)
     else if (pathName === '/sum' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
-            const data = JSON.parse(body);
-            const result = Number(data.a) + Number(data.b);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ result }));
+            if (!body) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'Bad Request: empty body' }));
+            }
+
+            try {
+                const data = JSON.parse(body);
+                const a = Number(data.a);
+                const b = Number(data.b);
+
+                if (isNaN(a) || isNaN(b)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ error: 'Bad Request: a and b must be numbers' }));
+                }
+
+                const result = a + b;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ result }));
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON format' }));
+            }
         });
     } 
     else {
-        res.writeHead(404,{'Content-Type': 'application/json'});
+        res.writeHead(404, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({ error: 'not found' }));
     }
 });
 
-server.listen(PORT, () => console.log(`Сервер працює на порту ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`server is working on ${PORT}`);
+});

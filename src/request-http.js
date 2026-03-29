@@ -12,14 +12,20 @@ const options = {
         'Content-Length': postData.length
     }
 };
-
 const req = http.request(options, (res) => {
     let body = '';
     res.on('data', chunk => { body += chunk; });
     res.on('end', () => {
-        console.log('Результат POST запиту:', JSON.parse(body));
+        try {
+            console.log('Результат POST запиту:', JSON.parse(body));
+        } catch (e) {
+            console.error('Помилка при парсингу відповіді від сервера:', e.message);
+        }
     });
+});
+req.on('error', (err) => {
+    console.error('Помилка запиту:', err.message);
 });
 
 req.write(postData); 
-req.end(); 
+req.end();
