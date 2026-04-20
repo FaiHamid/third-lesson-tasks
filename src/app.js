@@ -1,17 +1,21 @@
 import http from 'http';
-//Щоб код міг брати змінну PORT з .env, потрібно підключити пакет dotenv
-import dotenv from 'dotenv';
+import dotenv from  'dotenv';
+import { sumMainController } from './controllers/sum/sum-main.controller.js';
+import {getSum, postSum} from './request-axios.js';
+import { getSumRequest, postSumRequest } from './request-http.js';
 
-// Завантажуємо змінні оточення, а саме з файлу .env
+
 dotenv.config();
 
-const PORT = process.env.PORT || 8000;
-
 const server = http.createServer((req, res) => {
-    // Додайте сюди обробку
-    res.end();
+    if(req.url.startsWith('/sum')) {
+        sumMainController(req, res);
+    }
 });
 
-server.listen(PORT, () => {
-    console.log(`server is running on ${PORT}`);
-});
+const PORT = process.env.PORT;
+
+server.listen(PORT || 3000, () => {
+    console.log(`Server started at port ${PORT}`);
+    postSum(10, 15)
+})
